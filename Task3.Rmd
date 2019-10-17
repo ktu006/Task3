@@ -1,0 +1,75 @@
+---
+title: "Task3"
+author: "Kirill Tumanov"
+date: "16 10 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Package
+```{r}
+library(tidyverse)
+```
+
+#Transforming data
+```{r warning=FALSE}
+data17 <-  read_fwf("Nat2017PublicUS.c20180516.r20180808.txt", fwf_positions (start = c(475, 504, 13), end = c(475, 507, 14), col_names = c("sex","weight","month")))
+data18 <- read_fwf("Nat2018PublicUS.c20190509.r20190717.txt", fwf_positions (start = c(475, 504, 13), end = c(475, 507, 14), col_names = c("sex","weight","month")))
+```
+ 
+#Adding columns
+```{r}
+data17$year <- 2017
+data18$year <- 2018
+```
+
+#Merging tables
+```{r warning=FALSE}
+datalist <- full_join (data17,data18)
+```
+
+#Cleaning
+```{r}
+datalist$weight <- as.numeric(datalist$weight)
+datalist$month <- as.numeric(datalist$month)
+datalist$weight[datalist$weight == 9999] <- NA
+```
+
+#Question 1
+What is the proportion of boys to girls? Has it changed between 2017 and 2018?
+```{r}
+prop17 <- nrow(datalist[datalist$sex == "M" & datalist$year == 2017,]) / nrow(datalist[datalist$sex == "F" & datalist$year == 2017,])
+prop18 <- nrow(datalist[datalist$sex == "M" & datalist$year == 2018,]) / nrow(datalist[datalist$sex == "F" & datalist$year == 2018,])
+```
+The proportion of boys to girls is almost equal. In both years boys were born a little more than girls.
+In 2017 the proportion cosists 1.048 and in 2018 the proportion composes 1.046. The proportion has changed a little bit.
+More girls were born in 2018 to compare to 2017.
+
+#Question 2
+What is the average birth weight in grams?
+```{r}
+averweight <- mean(datalist$weight, na.rm = TRUE)
+```
+The average birth weight for a child is 3261.89 in grams.
+
+#Plot
+A density plot on the birth weight between boys and girls in 2018
+```{r}
+datalist[datalist$year == 2018,] %>%
+  ggplot(aes(x = weight, group = sex, col = sex)) +
+  geom_density() +
+  labs(x = "Weight", y = "Density", title = "The birth weight between boys and girls in 2018")
+```
+
+#Question 3
+Does the average birth weight vary by month and year?
+```{r}
+aver <- datalist %>%
+  group_by(month,year) %>%
+  summarise(averageweight = mean(weight,na.rm = TRUE))
+```
+It is clearly seen, that the average birth weight vary by month and year, but the differences are usually only a few grams.
+
